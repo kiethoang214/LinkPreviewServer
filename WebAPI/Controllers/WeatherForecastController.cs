@@ -46,7 +46,7 @@ namespace TestAPI2.Controllers
         [HttpGet]
         public async Task<string> getWebContent(String link)
         {
-            return btnGetURLDetails_Click(link);
+            return getWeb(link);
         }
 
         class HtmlData
@@ -57,7 +57,7 @@ namespace TestAPI2.Controllers
             public Uri url { get; set; }
         }
 
-        protected string btnGetURLDetails_Click(String url)
+        protected string getWeb(String url)
         {
             HttpWebRequest request = (HttpWebRequest)HttpWebRequest.Create(new Uri(url));
             request.Method = WebRequestMethods.Http.Get;
