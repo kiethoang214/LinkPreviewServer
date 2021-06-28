@@ -30,19 +30,6 @@ namespace TestAPI2.Controllers
             _logger = logger;
         }
 
-        //[HttpGet]
-        //public IEnumerable<WeatherForecast> Get()
-        //{
-        //    var rng = new Random();
-        //    return Enumerable.Range(1, 5).Select(index => new WeatherForecast
-        //    {
-        //        Date = DateTime.Now.AddDays(index),
-        //        TemperatureC = rng.Next(-20, 55),
-        //        Summary = Summaries[rng.Next(Summaries.Length)]
-        //    })
-        //    .ToArray();
-        //}
-
         [HttpGet]
         public async Task<string> getWebContent(String link)
         {
@@ -59,38 +46,42 @@ namespace TestAPI2.Controllers
 
         protected string getWeb(String url)
         {
-            HttpWebRequest request = (HttpWebRequest)HttpWebRequest.Create(new Uri(url));
-            request.Method = WebRequestMethods.Http.Get;
-
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-
-            StreamReader reader = new StreamReader(response.GetResponseStream());
-
-            String responseString = reader.ReadToEnd();
-
-            response.Close();
-
-            HtmlDocument doc = new HtmlDocument();
-            doc.LoadHtml(responseString);
-
-            String desc = (from x in doc.DocumentNode.Descendants()
-                           where x.Name.ToLower() == "meta"
-                           && x.Attributes["name"] != null
-                           && x.Attributes["name"].Value.ToLower() == "description"
-                           select x.Attributes["content"].Value).FirstOrDefault();
-
-            OpenGraph graph = OpenGraph.ParseUrl(url);
-
+            var getHtmlDoc = new HtmlWeb();
+            var document = getHtmlDoc.Load(url);
+            var metaTags = document.DocumentNode.SelectNodes("//meta");
             HtmlData data = new HtmlData();
-            data.title = graph.Title;
-            data.description = desc;
-            data.images = graph.Image;
-            data.url = new System.Uri(url);
+            if (metaTags != null)
+            {
+                foreach (var sitetag in metaTags)
+                {
+                    if (sitetag.Attributes["property"] != null && sitetag.Attributes["property"].Value == "og:title")
+                    {
+                        data.title = sitetag.Attributes["content"].Value;
+                    }
 
+                    if (sitetag.Attributes["property"] != null && sitetag.Attributes["property"].Value == "og:description")
+                    {
+                        data.description = sitetag.Attributes["content"].Value;
+                    }
+
+                    if (sitetag.Attributes["property"] != null && sitetag.Attributes["property"].Value == "og:image")
+                    {
+                        data.images = new Uri(sitetag.Attributes["content"].Value, UriKind.Absolute);
+                    }
+
+                    if (sitetag.Attributes["property"] != null && sitetag.Attributes["property"].Value == "og:url")
+                    {
+                        data.url = new Uri(sitetag.Attributes["content"].Value, UriKind.Absolute);
+                    }
+                }
+
+                if (data.url == null)
+                {
+                    data.url = new Uri(url);
+                }
+            }
             string stringjson = JsonConvert.SerializeObject(data);
             return stringjson;
         }
-
-
     }
 }

@@ -37,7 +37,7 @@ namespace WebAPI
                                   builder =>
                                   {
                                       builder.WithOrigins("https://localhost:8001",
-                                                          "http://www.contoso.com")
+                                                          "https://localhost:44362")
                                                             .AllowCredentials()
                                                             .AllowAnyHeader()
                                                             .AllowAnyMethod(); ;
